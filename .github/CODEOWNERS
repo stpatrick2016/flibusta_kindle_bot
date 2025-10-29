@@ -1,0 +1,29 @@
+# CODEOWNERS file for flibusta_kindle_bot
+# These owners will be the default owners for everything in the repo.
+# They will be requested for review when someone opens a pull request.
+
+# Global owner
+* @stpatrick2016
+
+# Go source code
+*.go @stpatrick2016
+
+# Configuration files
+*.yml @stpatrick2016
+*.yaml @stpatrick2016
+*.json @stpatrick2016
+*.toml @stpatrick2016
+
+# Terraform infrastructure
+/terraform/ @stpatrick2016
+
+# Documentation
+*.md @stpatrick2016
+/docs/ @stpatrick2016
+
+# GitHub workflows and configuration
+/.github/ @stpatrick2016
+
+# Docker
+Dockerfile @stpatrick2016
+.dockerignore @stpatrick2016
