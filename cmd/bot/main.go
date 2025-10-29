@@ -83,6 +83,7 @@ func main() {
 	case "webhook":
 		go runWebhookMode(ctx, cfg, botAPI, handler)
 	default:
+		cancel() // Cancel context before fatal
 		log.Fatalf("Unknown bot mode: %s", cfg.BotMode)
 	}
 
@@ -96,7 +97,7 @@ func main() {
 	log.Println("Bot stopped")
 }
 
-// runPollingMode runs the bot in polling mode (long polling)
+// runPollingMode runs the bot in polling mode (long polling).
 func runPollingMode(ctx context.Context, botAPI *tgbotapi.BotAPI, handler *bot.Handler) {
 	log.Println("Starting bot in polling mode...")
 
@@ -113,6 +114,7 @@ func runPollingMode(ctx context.Context, botAPI *tgbotapi.BotAPI, handler *bot.H
 		case <-ctx.Done():
 			log.Println("Stopping polling...")
 			botAPI.StopReceivingUpdates()
+
 			return
 		case update := <-updates:
 			// Process update in background to avoid blocking
@@ -125,19 +127,19 @@ func runPollingMode(ctx context.Context, botAPI *tgbotapi.BotAPI, handler *bot.H
 	}
 }
 
-// runWebhookMode runs the bot in webhook mode
+// runWebhookMode runs the bot in webhook mode.
 func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.BotAPI, handler *bot.Handler) {
 	log.Println("Starting bot in webhook mode...")
 
 	// Set webhook
-	webhookConfig, err := tgbotapi.NewWebhook(cfg.WebhookURL)
-	if err != nil {
-		log.Fatalf("Failed to create webhook config: %v", err)
+	webhookConfig, wErr := tgbotapi.NewWebhook(cfg.WebhookURL)
+	if wErr != nil {
+		log.Fatalf("Failed to create webhook config: %v", wErr)
 	}
 
-	// Note: SecretToken is available in newer versions of telegram-bot-api
-	// If needed, upgrade to v6+ for webhook secret token support
-	
+	// Note: SecretToken is available in newer versions of telegram-bot-api.
+	// If needed, upgrade to v6+ for webhook secret token support.
+
 	if _, err := botAPI.Request(webhookConfig); err != nil {
 		log.Fatalf("Failed to set webhook: %v", err)
 	}
@@ -161,6 +163,7 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 			if token != cfg.WebhookSecret {
 				log.Printf("Invalid webhook secret token")
 				w.WriteHeader(http.StatusUnauthorized)
+
 				return
 			}
 		}
@@ -170,6 +173,7 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 		if err != nil {
 			log.Printf("Error parsing webhook update: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
+
 			return
 		}
 
@@ -177,6 +181,7 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 		if err := handler.HandleUpdate(ctx, *update); err != nil {
 			log.Printf("Error handling webhook update: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
+
 			return
 		}
 

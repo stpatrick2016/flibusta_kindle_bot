@@ -254,7 +254,7 @@ func TestLoad_AllOptionalFields(t *testing.T) {
 	os.Setenv("AZURE_COMMUNICATION_CONNECTION_STRING", "connection_string")
 	os.Setenv("SENDER_EMAIL", "bot@example.com")
 	os.Setenv("APPINSIGHTS_INSTRUMENTATIONKEY", "insights_key")
-	
+
 	defer func() {
 		os.Unsetenv("TELEGRAM_BOT_TOKEN")
 		os.Unsetenv("BOT_MODE")

@@ -264,7 +264,7 @@ func (h *Handler) handleCallbackQuery(ctx context.Context, query *tgbotapi.Callb
 	// Handle language selection
 	if strings.HasPrefix(data, "lang_") {
 		lang := strings.TrimPrefix(data, "lang_")
-		
+
 		// Update user language
 		if err := h.userManager.SetLanguage(ctx, user.TelegramID, lang); err != nil {
 			return err

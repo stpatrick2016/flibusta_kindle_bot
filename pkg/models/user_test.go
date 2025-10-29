@@ -36,9 +36,9 @@ func TestUser_HasKindleEmail(t *testing.T) {
 
 func TestUser_GetDisplayName(t *testing.T) {
 	tests := []struct {
-		name      string
-		user      *User
-		expected  string
+		name     string
+		user     *User
+		expected string
 	}{
 		{
 			name: "username available",
@@ -130,7 +130,7 @@ func TestUser_IsValidLanguage(t *testing.T) {
 
 func TestSearchContext_IsActive(t *testing.T) {
 	now := time.Now()
-	
+
 	tests := []struct {
 		name     string
 		context  *SearchContext
@@ -188,7 +188,7 @@ func TestUser_UpdateLastActive(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	user.LastActive = time.Now()
-	
+
 	if !user.LastActive.After(oldTime) {
 		t.Error("LastActive was not updated to a newer time")
 	}
@@ -216,8 +216,8 @@ func TestPreferences_Validation(t *testing.T) {
 			shouldError: false,
 		},
 		{
-			name: "empty preferences",
-			prefs: &Preferences{},
+			name:        "empty preferences",
+			prefs:       &Preferences{},
 			shouldError: false,
 		},
 	}

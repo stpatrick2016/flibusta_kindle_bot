@@ -45,7 +45,7 @@ func (r *MemoryRepository) SaveUser(ctx context.Context, user *models.User) erro
 	defer r.mu.Unlock()
 
 	user.UpdatedAt = time.Now()
-	
+
 	// Store a copy
 	userCopy := *user
 	r.users[user.TelegramID] = &userCopy

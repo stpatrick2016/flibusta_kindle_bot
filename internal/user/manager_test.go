@@ -161,7 +161,7 @@ func TestManager_SetKindleEmail(t *testing.T) {
 
 	// Create a user first
 	user, _ := manager.GetOrCreateUser(ctx, 12345, "johndoe", "John", "Doe", "en")
-	
+
 	tests := []struct {
 		name    string
 		email   string

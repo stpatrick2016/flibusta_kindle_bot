@@ -13,16 +13,16 @@ type User struct {
 	Language    string    `json:"language"`     // User's preferred language (en, ru)
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-	BooksSent   int       `json:"books_sent"`     // Statistics
-	LastActive  time.Time `json:"last_active"`    // Last interaction time
-	IsActive    bool      `json:"is_active"`      // Is user active
-	IsBanned    bool      `json:"is_banned"`      // Is user banned
+	BooksSent   int       `json:"books_sent"`  // Statistics
+	LastActive  time.Time `json:"last_active"` // Last interaction time
+	IsActive    bool      `json:"is_active"`   // Is user active
+	IsBanned    bool      `json:"is_banned"`   // Is user banned
 }
 
 // Preferences represents user preferences
 type Preferences struct {
-	KindleEmail    string `json:"kindle_email"`
-	Language       string `json:"language"`
+	KindleEmail     string `json:"kindle_email"`
+	Language        string `json:"language"`
 	PreferredFormat string `json:"preferred_format"` // mobi, epub, pdf
 }
 

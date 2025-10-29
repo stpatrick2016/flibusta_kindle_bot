@@ -20,16 +20,16 @@ var (
 type Repository interface {
 	// GetUser retrieves a user by Telegram ID
 	GetUser(ctx context.Context, telegramID int64) (*models.User, error)
-	
+
 	// SaveUser creates or updates a user
 	SaveUser(ctx context.Context, user *models.User) error
-	
+
 	// UpdatePreferences updates user preferences
 	UpdatePreferences(ctx context.Context, telegramID int64, prefs *models.Preferences) error
-	
+
 	// IncrementBooksSent increments the books sent counter
 	IncrementBooksSent(ctx context.Context, telegramID int64) error
-	
+
 	// UpdateLastActive updates the last active timestamp
 	UpdateLastActive(ctx context.Context, telegramID int64) error
 }
