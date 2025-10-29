@@ -219,7 +219,7 @@ func TestI18n_AvailableLanguages(t *testing.T) {
 		t.Fatalf("Failed to create i18n: %v", err)
 	}
 	
-	langs := i18n.AvailableLanguages()
+	langs := i18n.GetSupportedLanguages()
 	
 	if len(langs) != 3 {
 		t.Errorf("Expected 3 languages, got %d", len(langs))

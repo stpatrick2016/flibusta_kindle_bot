@@ -2,13 +2,12 @@ package bot
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/i18n"
-	"github.com/stpatrick2016/flibusta_kindle_bot/internal/user"
+	usermanager "github.com/stpatrick2016/flibusta_kindle_bot/internal/user"
 	"github.com/stpatrick2016/flibusta_kindle_bot/pkg/models"
 )
 
@@ -16,11 +15,11 @@ import (
 type Handler struct {
 	bot         *tgbotapi.BotAPI
 	i18n        *i18n.I18n
-	userManager *user.Manager
+	userManager *usermanager.Manager
 }
 
 // NewHandler creates a new bot handler
-func NewHandler(bot *tgbotapi.BotAPI, i18n *i18n.I18n, userManager *user.Manager) *Handler {
+func NewHandler(bot *tgbotapi.BotAPI, i18n *i18n.I18n, userManager *usermanager.Manager) *Handler {
 	return &Handler{
 		bot:         bot,
 		i18n:        i18n,
@@ -141,7 +140,7 @@ func (h *Handler) handleKindle(ctx context.Context, message *tgbotapi.Message, u
 	// Set Kindle email
 	email := strings.TrimSpace(args)
 	if err := h.userManager.SetKindleEmail(ctx, user.TelegramID, email); err != nil {
-		if err == user.ErrInvalidKindleEmail {
+		if err == usermanager.ErrInvalidEmail {
 			return h.sendMessage(message.Chat.ID, user.Language, "kindle_email_invalid", nil)
 		}
 		return err

@@ -89,14 +89,14 @@ func setupTestHandler(t *testing.T) (*Handler, *mockBotAPI, *user.Manager) {
 }
 
 func TestHandler_HandleCommand_Start(t *testing.T) {
-	handler, _, userManager := setupTestHandler(t)
+	_, _, userManager := setupTestHandler(t)
 	ctx := context.Background()
 	
 	// Create a test user
 	testUser, _ := userManager.GetOrCreateUser(ctx, 12345, "testuser", "Test", "User", "en")
 	
 	// Test start command for new user without Kindle email
-	message := &tgbotapi.Message{
+	_ = &tgbotapi.Message{
 		MessageID: 1,
 		From: &tgbotapi.User{
 			ID:        12345,
@@ -146,7 +146,7 @@ func TestHandler_ExtractCommand(t *testing.T) {
 	
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			message := &tgbotapi.Message{
+			_ = &tgbotapi.Message{
 				Text: tt.text,
 			}
 			

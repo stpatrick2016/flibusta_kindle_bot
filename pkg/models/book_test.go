@@ -171,7 +171,7 @@ func TestBook_GetDownloadURL(t *testing.T) {
 
 func TestBook_String(t *testing.T) {
 	book := &Book{
-		ID:     123,
+		ID:     "123",
 		Title:  "Test Book",
 		Author: "John Doe",
 		Format: "epub",

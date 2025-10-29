@@ -34,6 +34,11 @@ type SearchContext struct {
 	ExpiresAt time.Time `json:"expires_at"`
 }
 
+// IsActive checks if the search context is still active (not expired)
+func (sc *SearchContext) IsActive() bool {
+	return time.Now().Before(sc.ExpiresAt)
+}
+
 // HasKindleEmail checks if user has configured their Kindle email
 func (u *User) HasKindleEmail() bool {
 	return u.KindleEmail != ""

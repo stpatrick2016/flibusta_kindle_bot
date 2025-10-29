@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/stpatrick2016/flibusta_kindle_bot/pkg/models"
@@ -114,6 +115,11 @@ func (m *Manager) RecordBookSent(ctx context.Context, telegramID int64) error {
 // ValidateKindleEmail validates the format of a Kindle email
 func ValidateKindleEmail(email string) error {
 	if email == "" {
+		return ErrInvalidEmail
+	}
+
+	// Cannot contain spaces
+	if strings.Contains(email, " ") {
 		return ErrInvalidEmail
 	}
 

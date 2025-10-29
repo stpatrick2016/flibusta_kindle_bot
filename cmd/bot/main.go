@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize i18n: %v", err)
 	}
-	log.Printf("Loaded translations for languages: %v", i18nInstance.AvailableLanguages())
+	log.Printf("Loaded translations for languages: %v", i18nInstance.GetSupportedLanguages())
 
 	// Initialize user repository
 	var userRepo user.Repository
@@ -135,10 +135,9 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 		log.Fatalf("Failed to create webhook config: %v", err)
 	}
 
-	if cfg.WebhookSecret != "" {
-		webhookConfig.SecretToken = cfg.WebhookSecret
-	}
-
+	// Note: SecretToken is available in newer versions of telegram-bot-api
+	// If needed, upgrade to v6+ for webhook secret token support
+	
 	if _, err := botAPI.Request(webhookConfig); err != nil {
 		log.Fatalf("Failed to set webhook: %v", err)
 	}

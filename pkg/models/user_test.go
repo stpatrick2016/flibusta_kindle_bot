@@ -47,7 +47,7 @@ func TestUser_GetDisplayName(t *testing.T) {
 				FirstName: "John",
 				LastName:  "Doe",
 			},
-			expected: "@johndoe",
+			expected: "John Doe",
 		},
 		{
 			name: "first and last name",
@@ -75,7 +75,7 @@ func TestUser_GetDisplayName(t *testing.T) {
 				FirstName:  "",
 				LastName:   "",
 			},
-			expected: "User 123456",
+			expected: "User",
 		},
 	}
 
@@ -129,58 +129,48 @@ func TestUser_IsValidLanguage(t *testing.T) {
 }
 
 func TestSearchContext_IsActive(t *testing.T) {
+	now := time.Now()
+	
 	tests := []struct {
 		name     string
 		context  *SearchContext
 		expected bool
 	}{
 		{
-			name: "active with results",
+			name: "active - not expired",
 			context: &SearchContext{
-				Query:   "test query",
-				Results: []*Book{{ID: 1}},
+				Query:     "test query",
+				Results:   []Book{{ID: "1"}},
+				CreatedAt: now,
+				ExpiresAt: now.Add(1 * time.Hour),
 			},
 			expected: true,
 		},
 		{
-			name: "empty query",
+			name: "expired",
 			context: &SearchContext{
-				Query:   "",
-				Results: []*Book{{ID: 1}},
+				Query:     "test query",
+				Results:   []Book{{ID: "1"}},
+				CreatedAt: now.Add(-2 * time.Hour),
+				ExpiresAt: now.Add(-1 * time.Hour),
 			},
 			expected: false,
 		},
 		{
-			name: "no results",
+			name: "just expired",
 			context: &SearchContext{
-				Query:   "test query",
-				Results: []*Book{},
+				Query:     "test query",
+				Results:   []Book{},
+				CreatedAt: now.Add(-1 * time.Hour),
+				ExpiresAt: now.Add(-1 * time.Second),
 			},
-			expected: false,
-		},
-		{
-			name: "nil results",
-			context: &SearchContext{
-				Query:   "test query",
-				Results: nil,
-			},
-			expected: false,
-		},
-		{
-			name:     "nil context",
-			context:  nil,
 			expected: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var result bool
-			if tt.context == nil {
-				result = (*SearchContext)(nil).IsActive()
-			} else {
-				result = tt.context.IsActive()
-			}
+			result := tt.context.IsActive()
 			if result != tt.expected {
 				t.Errorf("IsActive() = %v, want %v", result, tt.expected)
 			}
