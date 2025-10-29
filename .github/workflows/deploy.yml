@@ -1,0 +1,215 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  AZURE_CONTAINER_REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+  CONTAINER_APP_NAME: flibusta-bot
+  RESOURCE_GROUP: flibusta-bot-rg
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+          username: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+          password: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.AZURE_CONTAINER_REGISTRY }}/flibusta-bot
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.AZURE_CONTAINER_REGISTRY }}/flibusta-bot:buildcache
+          cache-to: type=registry,ref=${{ secrets.AZURE_CONTAINER_REGISTRY }}/flibusta-bot:buildcache,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+
+  deploy-to-azure:
+    name: Deploy to Azure Container Apps
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment:
+      name: ${{ github.event.inputs.environment || 'production' }}
+      url: https://${{ steps.deploy.outputs.app-url }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get Container App details
+        id: app-info
+        run: |
+          echo "Getting current container app details..."
+          az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "properties.configuration.ingress.fqdn" \
+            --output tsv > app_url.txt || echo "App not found"
+
+      - name: Deploy to Azure Container Apps
+        id: deploy
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          containerAppName: ${{ env.CONTAINER_APP_NAME }}
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          imageToDeploy: ${{ needs.build-and-push.outputs.image-tag }}
+          targetPort: 8080
+          environmentVariables: |
+            TELEGRAM_BOT_TOKEN=secretref:telegram-bot-token
+            ACS_CONNECTION_STRING=secretref:acs-connection-string
+            ACS_SENDER_ADDRESS=secretref:acs-sender-address
+            DATABASE_CONNECTION_STRING=secretref:database-connection-string
+            AZURE_APPINSIGHTS_KEY=secretref:appinsights-key
+            LOG_LEVEL=${{ secrets.LOG_LEVEL || 'info' }}
+
+      - name: Get deployment URL
+        id: get-url
+        run: |
+          APP_URL=$(az containerapp show \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "properties.configuration.ingress.fqdn" \
+            --output tsv)
+          echo "app-url=https://$APP_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: https://$APP_URL"
+
+      - name: Verify deployment
+        run: |
+          echo "Waiting for container app to be ready..."
+          sleep 30
+          
+          APP_URL="${{ steps.get-url.outputs.app-url }}"
+          
+          # Check health endpoint (if implemented)
+          if curl -f -s -o /dev/null -w "%{http_code}" "$APP_URL/health" | grep -q "200"; then
+            echo "✅ Health check passed"
+          else
+            echo "⚠️ Health check endpoint not available or failing"
+          fi
+
+      - name: Create deployment summary
+        run: |
+          echo "## Deployment Summary 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ needs.build-and-push.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.get-url.outputs.app-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Deployment Status" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Container image built and pushed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Deployed to Azure Container Apps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View Application](${{ steps.get-url.outputs.app-url }})" >> $GITHUB_STEP_SUMMARY
+
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-to-azure]
+    if: failure()
+    
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get previous revision
+        id: get-revision
+        run: |
+          PREVIOUS_REVISION=$(az containerapp revision list \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --query "[?properties.active==\`true\`].name | [1]" \
+            --output tsv)
+          echo "previous-revision=$PREVIOUS_REVISION" >> $GITHUB_OUTPUT
+
+      - name: Rollback to previous revision
+        if: steps.get-revision.outputs.previous-revision != ''
+        run: |
+          echo "Rolling back to revision: ${{ steps.get-revision.outputs.previous-revision }}"
+          az containerapp revision activate \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --revision ${{ steps.get-revision.outputs.previous-revision }}
+          
+          echo "⚠️ Deployment failed and was rolled back" >> $GITHUB_STEP_SUMMARY
+          echo "Previous revision restored: ${{ steps.get-revision.outputs.previous-revision }}" >> $GITHUB_STEP_SUMMARY
+
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [deploy-to-azure]
+    if: always()
+    
+    steps:
+      - name: Send success notification
+        if: needs.deploy-to-azure.result == 'success'
+        run: |
+          echo "✅ Deployment successful!"
+          # Add Slack/Teams/Discord webhook here if needed
+          # curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+          #   -H 'Content-Type: application/json' \
+          #   -d '{"text":"✅ Flibusta Bot deployed successfully to ${{ github.event.inputs.environment || 'production' }}"}'
+
+      - name: Send failure notification
+        if: needs.deploy-to-azure.result == 'failure'
+        run: |
+          echo "❌ Deployment failed!"
+          # Add Slack/Teams/Discord webhook here if needed
+          # curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+          #   -H 'Content-Type: application/json' \
+          #   -d '{"text":"❌ Flibusta Bot deployment failed! Check GitHub Actions for details."}'

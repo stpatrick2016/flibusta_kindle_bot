@@ -1,0 +1,113 @@
+# golangci-lint configuration
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck      # Check for unchecked errors
+    - gosimple      # Simplify code
+    - govet         # Reports suspicious constructs
+    - ineffassign   # Detects unused assignments
+    - staticcheck   # Advanced go vet
+    - unused        # Checks for unused constants, variables, functions
+    - typecheck     # Type checks
+    - gofmt         # Checks code is formatted
+    - goimports     # Checks imports are formatted
+    - misspell      # Finds commonly misspelled words
+    - gocritic      # Provides diagnostics
+    - revive        # Fast, configurable, extensible linter
+    - gosec         # Security problems
+    - bodyclose     # HTTP response body is closed
+    - noctx         # HTTP requests should use context
+    - sqlclosecheck # SQL rows/statements are closed
+    - rowserrcheck  # Checks if Err of rows is checked
+    - errname       # Error naming conventions
+    - errorlint     # Error wrapping in Go 1.13+
+    - exhaustive    # Check exhaustiveness of enum switch
+    - exportloopref # Checks for pointers to loop variables
+    - gochecknoinits # No init functions
+    - goconst       # Repeated strings that could be constants
+    - godot         # Comments should end in period
+    - gofumpt       # Stricter gofmt
+    - goprintffuncname # Printf-like functions are named correctly
+    - nilerr        # Finds code that returns nil with error
+    - nlreturn      # New line before return
+    - nolintlint    # Reports ill-formed nolint directives
+    - prealloc      # Finds slices that could be pre-allocated
+    - predeclared   # Finds code that shadows predeclared identifiers
+    - unconvert     # Unnecessary type conversions
+    - unparam       # Reports unused function parameters
+    - whitespace    # Detects leading/trailing whitespace
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  govet:
+    check-shadowing: true
+    enable-all: true
+
+  gofmt:
+    simplify: true
+
+  goimports:
+    local-prefixes: github.com/yourusername/flibusta_kindle_bot
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+      - style
+      - experimental
+    disabled-checks:
+      - commentFormatting
+
+  gosec:
+    excludes:
+      - G404 # Use of weak random number generator (math/rand)
+
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+      - name: unused-parameter
+        severity: warning
+        disabled: false
+      - name: var-naming
+        severity: warning
+        disabled: false
+
+  staticcheck:
+    checks: ["all"]
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gochecknoinits
+        - errcheck
+        - gosec
+        - dupl
+
+    # Exclude known false positives
+    - text: "G404: Use of weak random number generator"
+      linters:
+        - gosec
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true

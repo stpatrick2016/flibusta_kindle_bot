@@ -1,0 +1,19 @@
+# Terraform variables for Flibusta Kindle Bot
+
+# Required: Set this via terraform.tfvars or environment variable TF_VAR_telegram_bot_token
+telegram_bot_token = "YOUR_TELEGRAM_BOT_TOKEN_HERE"
+
+# Optional: Override defaults
+# project_name         = "flibusta-bot"
+# resource_group_name  = "flibusta-bot-rg"
+# location             = "eastus"
+# environment          = "prod"
+
+# Container configuration
+# container_cpu    = 0.5
+# container_memory = "1Gi"
+# min_replicas     = 1
+# max_replicas     = 3
+
+# Azure Communication Services
+# acs_data_location = "United States"
