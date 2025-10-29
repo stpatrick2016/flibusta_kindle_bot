@@ -1,8 +1,9 @@
 name: Deploy to Azure
 
 on:
-  push:
-    branches: [master]
+  # Automatic deployment disabled - use manual workflow_dispatch only
+  # push:
+  #   branches: [master]
   workflow_dispatch:
     inputs:
       environment:
