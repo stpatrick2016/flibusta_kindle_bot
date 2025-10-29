@@ -181,7 +181,7 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 		}
 
 		// Handle update
-		if err := handler.HandleUpdate(ctx, *update); err != nil {
+		if err := handler.HandleUpdate(ctx, update); err != nil {
 			log.Printf("Error handling webhook update: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 
