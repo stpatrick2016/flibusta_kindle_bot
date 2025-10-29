@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yourusername/flibusta_kindle_bot/pkg/models"
+	"github.com/stpatrick2016/flibusta_kindle_bot/pkg/models"
 )
 
 // MemoryRepository is an in-memory implementation of Repository

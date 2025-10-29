@@ -56,7 +56,7 @@ linters-settings:
     simplify: true
 
   goimports:
-    local-prefixes: github.com/yourusername/flibusta_kindle_bot
+    local-prefixes: github.com/stpatrick2016/flibusta_kindle_bot
 
   gocritic:
     enabled-tags:

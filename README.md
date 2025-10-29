@@ -2,9 +2,9 @@
 
 A Telegram bot written in Go that searches for books on flibusta.is and sends them directly to your Kindle device.
 
-[![Deploy to Azure](https://github.com/yourusername/flibusta_kindle_bot/actions/workflows/deploy.yml/badge.svg)](https://github.com/yourusername/flibusta_kindle_bot/actions/workflows/deploy.yml)
-[![PR Checks](https://github.com/yourusername/flibusta_kindle_bot/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/yourusername/flibusta_kindle_bot/actions/workflows/pr-checks.yml)
-[![codecov](https://codecov.io/gh/yourusername/flibusta_kindle_bot/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/flibusta_kindle_bot)
+[![Deploy to Azure](https://github.com/stpatrick2016/flibusta_kindle_bot/actions/workflows/deploy.yml/badge.svg)](https://github.com/stpatrick2016/flibusta_kindle_bot/actions/workflows/deploy.yml)
+[![PR Checks](https://github.com/stpatrick2016/flibusta_kindle_bot/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/stpatrick2016/flibusta_kindle_bot/actions/workflows/pr-checks.yml)
+[![codecov](https://codecov.io/gh/stpatrick2016/flibusta_kindle_bot/branch/main/graph/badge.svg)](https://codecov.io/gh/stpatrick2016/flibusta_kindle_bot)
 
 ## ✨ Features
 
@@ -31,7 +31,7 @@ A Telegram bot written in Go that searches for books on flibusta.is and sends th
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/flibusta_kindle_bot.git
+git clone https://github.com/stpatrick2016/flibusta_kindle_bot.git
 cd flibusta_kindle_bot
 
 # Install dependencies
@@ -213,7 +213,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 💬 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/flibusta_kindle_bot/issues)
+- **Issues**: [GitHub Issues](https://github.com/stpatrick2016/flibusta_kindle_bot/issues)
 - **Documentation**: [docs/](docs/)
 - **Telegram**: [@your_support_contact](https://t.me/your_support_contact)
 

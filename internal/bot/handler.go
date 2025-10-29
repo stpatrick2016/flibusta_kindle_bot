@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/yourusername/flibusta_kindle_bot/internal/i18n"
-	"github.com/yourusername/flibusta_kindle_bot/internal/user"
-	"github.com/yourusername/flibusta_kindle_bot/pkg/models"
+	"github.com/stpatrick2016/flibusta_kindle_bot/internal/i18n"
+	"github.com/stpatrick2016/flibusta_kindle_bot/internal/user"
+	"github.com/stpatrick2016/flibusta_kindle_bot/pkg/models"
 )
 
 // Handler handles Telegram bot updates

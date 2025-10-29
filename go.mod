@@ -1,4 +1,4 @@
-module github.com/yourusername/flibusta_kindle_bot
+module github.com/stpatrick2016/flibusta_kindle_bot
 
 go 1.21
 
