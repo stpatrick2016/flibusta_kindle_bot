@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/i18n"
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/user"
 )
@@ -93,7 +94,10 @@ func TestHandler_HandleCommand_Start(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a test user
-	testUser, _ := userManager.GetOrCreateUser(ctx, 12345, "testuser", "Test", "User", "en")
+	testUser, err := userManager.GetOrCreateUser(ctx, 12345, "testuser", "Test", "User", "en")
+	if err != nil {
+		t.Fatalf("Failed to create user: %v", err)
+	}
 
 	// Test start command for new user without Kindle email
 	_ = &tgbotapi.Message{
@@ -107,11 +111,7 @@ func TestHandler_HandleCommand_Start(t *testing.T) {
 		Text: "/start",
 	}
 
-	// Since we can't actually send messages, we'll just verify the logic works
-	if testUser == nil {
-		t.Error("User should be created")
-	}
-
+	// Verify user was created correctly
 	if testUser.TelegramID != 12345 {
 		t.Errorf("TelegramID = %v, want %v", testUser.TelegramID, 12345)
 	}

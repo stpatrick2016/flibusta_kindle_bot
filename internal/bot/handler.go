@@ -309,9 +309,3 @@ func (h *Handler) sendMessage(chatID int64, language, key string, args ...interf
 	_, err := h.bot.Send(msg)
 	return err
 }
-
-// sendError sends an error message to the user.
-func (h *Handler) sendError(chatID int64, language string, err error) error {
-	log.Printf("Error: %v", err)
-	return h.sendMessage(chatID, language, "error_occurred", nil)
-}
