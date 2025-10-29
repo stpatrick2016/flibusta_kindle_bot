@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/stpatrick2016/flibusta_kindle_bot/pkg/models"
@@ -19,16 +20,16 @@ var (
 type Repository interface {
 	// GetUser retrieves a user by Telegram ID
 	GetUser(ctx context.Context, telegramID int64) (*models.User, error)
-	
+
 	// SaveUser creates or updates a user
 	SaveUser(ctx context.Context, user *models.User) error
-	
+
 	// UpdatePreferences updates user preferences
 	UpdatePreferences(ctx context.Context, telegramID int64, prefs *models.Preferences) error
-	
+
 	// IncrementBooksSent increments the books sent counter
 	IncrementBooksSent(ctx context.Context, telegramID int64) error
-	
+
 	// UpdateLastActive updates the last active timestamp
 	UpdateLastActive(ctx context.Context, telegramID int64) error
 }
@@ -114,6 +115,11 @@ func (m *Manager) RecordBookSent(ctx context.Context, telegramID int64) error {
 // ValidateKindleEmail validates the format of a Kindle email
 func ValidateKindleEmail(email string) error {
 	if email == "" {
+		return ErrInvalidEmail
+	}
+
+	// Cannot contain spaces
+	if strings.Contains(email, " ") {
 		return ErrInvalidEmail
 	}
 

@@ -2,25 +2,25 @@ package bot
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/i18n"
-	"github.com/stpatrick2016/flibusta_kindle_bot/internal/user"
+	usermanager "github.com/stpatrick2016/flibusta_kindle_bot/internal/user"
 	"github.com/stpatrick2016/flibusta_kindle_bot/pkg/models"
 )
 
-// Handler handles Telegram bot updates
+// Handler handles Telegram bot updates.
 type Handler struct {
 	bot         *tgbotapi.BotAPI
 	i18n        *i18n.I18n
-	userManager *user.Manager
+	userManager *usermanager.Manager
 }
 
-// NewHandler creates a new bot handler
-func NewHandler(bot *tgbotapi.BotAPI, i18n *i18n.I18n, userManager *user.Manager) *Handler {
+// NewHandler creates a new bot handler.
+func NewHandler(bot *tgbotapi.BotAPI, i18n *i18n.I18n, userManager *usermanager.Manager) *Handler {
 	return &Handler{
 		bot:         bot,
 		i18n:        i18n,
@@ -28,8 +28,8 @@ func NewHandler(bot *tgbotapi.BotAPI, i18n *i18n.I18n, userManager *user.Manager
 	}
 }
 
-// HandleUpdate processes incoming Telegram updates
-func (h *Handler) HandleUpdate(ctx context.Context, update tgbotapi.Update) error {
+// HandleUpdate processes incoming Telegram updates.
+func (h *Handler) HandleUpdate(ctx context.Context, update *tgbotapi.Update) error {
 	// Handle callback queries (inline keyboard button clicks)
 	if update.CallbackQuery != nil {
 		return h.handleCallbackQuery(ctx, update.CallbackQuery)
@@ -43,12 +43,13 @@ func (h *Handler) HandleUpdate(ctx context.Context, update tgbotapi.Update) erro
 	return nil
 }
 
-// handleMessage processes incoming messages
+// handleMessage processes incoming messages.
 func (h *Handler) handleMessage(ctx context.Context, message *tgbotapi.Message) error {
 	// Get or create user
 	user, err := h.userManager.GetOrCreateUser(ctx, message.From.ID, message.From.FirstName, message.From.LastName, message.From.UserName, message.From.LanguageCode)
 	if err != nil {
 		log.Printf("Failed to get/create user: %v", err)
+
 		return err
 	}
 
@@ -61,32 +62,32 @@ func (h *Handler) handleMessage(ctx context.Context, message *tgbotapi.Message) 
 	return h.handleSearchQuery(ctx, message, user)
 }
 
-// handleCommand processes bot commands
+// handleCommand processes bot commands.
 func (h *Handler) handleCommand(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
 	command := message.Command()
 
 	switch command {
 	case "start":
-		return h.handleStart(ctx, message, user)
+		return h.handleStart(message, user)
 	case "help":
-		return h.handleHelp(ctx, message, user)
+		return h.handleHelp(message, user)
 	case "kindle":
 		return h.handleKindle(ctx, message, user)
 	case "language":
 		return h.handleLanguage(ctx, message, user)
 	case "whitelist":
-		return h.handleWhitelist(ctx, message, user)
+		return h.handleWhitelist(message, user)
 	case "settings":
-		return h.handleSettings(ctx, message, user)
+		return h.handleSettings(message, user)
 	case "cancel":
-		return h.handleCancel(ctx, message, user)
+		return h.handleCancel(message, user)
 	default:
 		return h.sendMessage(message.Chat.ID, user.Language, "unknown_command", nil)
 	}
 }
 
-// handleStart handles /start command
-func (h *Handler) handleStart(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
+// handleStart handles /start command.
+func (h *Handler) handleStart(message *tgbotapi.Message, user *models.User) error {
 	// Send welcome message
 	welcomeMsg := h.i18n.T(user.Language, "welcome", user.FirstName)
 	msg := tgbotapi.NewMessage(message.Chat.ID, welcomeMsg)
@@ -121,12 +122,12 @@ func (h *Handler) handleStart(ctx context.Context, message *tgbotapi.Message, us
 	return nil
 }
 
-// handleHelp handles /help command
-func (h *Handler) handleHelp(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
+// handleHelp handles /help command.
+func (h *Handler) handleHelp(message *tgbotapi.Message, user *models.User) error {
 	return h.sendMessage(message.Chat.ID, user.Language, "help_message", nil)
 }
 
-// handleKindle handles /kindle command (set Kindle email)
+// handleKindle handles /kindle command (set Kindle email).
 func (h *Handler) handleKindle(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
 	args := message.CommandArguments()
 
@@ -141,7 +142,7 @@ func (h *Handler) handleKindle(ctx context.Context, message *tgbotapi.Message, u
 	// Set Kindle email
 	email := strings.TrimSpace(args)
 	if err := h.userManager.SetKindleEmail(ctx, user.TelegramID, email); err != nil {
-		if err == user.ErrInvalidKindleEmail {
+		if err == usermanager.ErrInvalidEmail {
 			return h.sendMessage(message.Chat.ID, user.Language, "kindle_email_invalid", nil)
 		}
 		return err
@@ -158,7 +159,7 @@ func (h *Handler) handleKindle(ctx context.Context, message *tgbotapi.Message, u
 	return h.sendMessage(message.Chat.ID, user.Language, "whitelist_reminder", nil)
 }
 
-// handleLanguage handles /language command
+// handleLanguage handles /language command.
 func (h *Handler) handleLanguage(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
 	// Create inline keyboard with language options
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(
@@ -175,16 +176,16 @@ func (h *Handler) handleLanguage(ctx context.Context, message *tgbotapi.Message,
 	return err
 }
 
-// handleWhitelist handles /whitelist command
-func (h *Handler) handleWhitelist(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
+// handleWhitelist handles /whitelist command.
+func (h *Handler) handleWhitelist(message *tgbotapi.Message, user *models.User) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, h.i18n.T(user.Language, "whitelist_instructions"))
 	msg.ParseMode = "Markdown"
 	_, err := h.bot.Send(msg)
 	return err
 }
 
-// handleSettings handles /settings command
-func (h *Handler) handleSettings(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
+// handleSettings handles /settings command.
+func (h *Handler) handleSettings(message *tgbotapi.Message, user *models.User) error {
 	// Display current settings
 	kindleEmail := user.KindleEmail
 	if kindleEmail == "" {
@@ -201,14 +202,14 @@ func (h *Handler) handleSettings(ctx context.Context, message *tgbotapi.Message,
 	return h.sendMessage(message.Chat.ID, user.Language, "settings_display", kindleEmail, language, user.BooksSent)
 }
 
-// handleCancel handles /cancel command
-func (h *Handler) handleCancel(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
+// handleCancel handles /cancel command.
+func (h *Handler) handleCancel(message *tgbotapi.Message, user *models.User) error {
 	// Cancel any active search context
 	// This will be implemented when we add search functionality
 	return h.sendMessage(message.Chat.ID, user.Language, "operation_cancelled", nil)
 }
 
-// handleSearchQuery handles text messages as book search queries
+// handleSearchQuery handles text messages as book search queries.
 func (h *Handler) handleSearchQuery(ctx context.Context, message *tgbotapi.Message, user *models.User) error {
 	query := strings.TrimSpace(message.Text)
 
@@ -250,7 +251,7 @@ func (h *Handler) handleSearchQuery(ctx context.Context, message *tgbotapi.Messa
 	return h.sendMessage(message.Chat.ID, user.Language, "search_not_implemented", nil)
 }
 
-// handleCallbackQuery handles inline keyboard button clicks
+// handleCallbackQuery handles inline keyboard button clicks.
 func (h *Handler) handleCallbackQuery(ctx context.Context, query *tgbotapi.CallbackQuery) error {
 	// Get user
 	user, err := h.userManager.GetOrCreateUser(ctx, query.From.ID, query.From.FirstName, query.From.LastName, query.From.UserName, query.From.LanguageCode)
@@ -265,7 +266,7 @@ func (h *Handler) handleCallbackQuery(ctx context.Context, query *tgbotapi.Callb
 	// Handle language selection
 	if strings.HasPrefix(data, "lang_") {
 		lang := strings.TrimPrefix(data, "lang_")
-		
+
 		// Update user language
 		if err := h.userManager.SetLanguage(ctx, user.TelegramID, lang); err != nil {
 			return err
@@ -301,16 +302,10 @@ func (h *Handler) handleCallbackQuery(ctx context.Context, query *tgbotapi.Callb
 	return err
 }
 
-// sendMessage is a helper to send localized messages
+// sendMessage is a helper to send localized messages.
 func (h *Handler) sendMessage(chatID int64, language, key string, args ...interface{}) error {
 	text := h.i18n.T(language, key, args...)
 	msg := tgbotapi.NewMessage(chatID, text)
 	_, err := h.bot.Send(msg)
 	return err
-}
-
-// sendError sends an error message to the user
-func (h *Handler) sendError(chatID int64, language string, err error) error {
-	log.Printf("Error: %v", err)
-	return h.sendMessage(chatID, language, "error_occurred", nil)
 }

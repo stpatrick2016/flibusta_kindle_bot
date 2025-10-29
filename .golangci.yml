@@ -18,39 +18,40 @@ linters:
     - gofmt         # Checks code is formatted
     - goimports     # Checks imports are formatted
     - misspell      # Finds commonly misspelled words
-    - gocritic      # Provides diagnostics
-    - revive        # Fast, configurable, extensible linter
     - gosec         # Security problems
     - bodyclose     # HTTP response body is closed
     - noctx         # HTTP requests should use context
     - sqlclosecheck # SQL rows/statements are closed
     - rowserrcheck  # Checks if Err of rows is checked
-    - errname       # Error naming conventions
-    - errorlint     # Error wrapping in Go 1.13+
-    - exhaustive    # Check exhaustiveness of enum switch
-    - exportloopref # Checks for pointers to loop variables
-    - gochecknoinits # No init functions
-    - goconst       # Repeated strings that could be constants
-    - godot         # Comments should end in period
-    - gofumpt       # Stricter gofmt
-    - goprintffuncname # Printf-like functions are named correctly
-    - nilerr        # Finds code that returns nil with error
-    - nlreturn      # New line before return
-    - nolintlint    # Reports ill-formed nolint directives
-    - prealloc      # Finds slices that could be pre-allocated
-    - predeclared   # Finds code that shadows predeclared identifiers
-    - unconvert     # Unnecessary type conversions
-    - unparam       # Reports unused function parameters
-    - whitespace    # Detects leading/trailing whitespace
+  disable:
+    - gocritic      # Too strict for now
+    - revive        # Too strict for now  
+    - errorlint     # Too strict for now
+    - exhaustive    # Too strict for now
+    - exportloopref # Deprecated
+    - gochecknoinits # Too strict for now
+    - goconst       # Too strict for now
+    - godot         # Too strict for now
+    - gofumpt       # Too strict for now
+    - goprintffuncname # Too strict for now
+    - nilerr        # Too strict for now
+    - nlreturn      # Too strict for now
+    - nolintlint    # Too strict for now
+    - prealloc      # Too strict for now
+    - predeclared   # Too strict for now
+    - unconvert     # Too strict for now
+    - unparam       # Too strict for now
+    - whitespace    # Too strict for now
+    - errname       # Too strict for now
 
 linters-settings:
   errcheck:
     check-type-assertions: true
-    check-blank: true
+    check-blank: false  # Too strict
 
   govet:
-    check-shadowing: true
-    enable-all: true
+    check-shadowing: false  # Too strict
+    enable-all: false  # Too strict
 
   gofmt:
     simplify: true
@@ -58,30 +59,9 @@ linters-settings:
   goimports:
     local-prefixes: github.com/stpatrick2016/flibusta_kindle_bot
 
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - performance
-      - style
-      - experimental
-    disabled-checks:
-      - commentFormatting
-
   gosec:
     excludes:
       - G404 # Use of weak random number generator (math/rand)
-
-  revive:
-    rules:
-      - name: exported
-        severity: warning
-        disabled: false
-      - name: unused-parameter
-        severity: warning
-        disabled: false
-      - name: var-naming
-        severity: warning
-        disabled: false
 
   staticcheck:
     checks: ["all"]

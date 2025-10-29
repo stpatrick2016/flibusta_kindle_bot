@@ -22,8 +22,22 @@ func New(defaultLang string) *I18n {
 	}
 }
 
+// NewI18n creates a new I18n instance and loads translations from the specified directory
+func NewI18n(dir, defaultLang string) (*I18n, error) {
+	i18n := New(defaultLang)
+	if err := i18n.LoadTranslations(dir); err != nil {
+		return nil, err
+	}
+	return i18n, nil
+}
+
 // LoadTranslations loads translation files from a directory
 func (i *I18n) LoadTranslations(dir string) error {
+	// Check if directory exists
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return fmt.Errorf("directory does not exist: %s", dir)
+	}
+
 	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	if err != nil {
 		return fmt.Errorf("failed to list translation files: %w", err)
@@ -32,7 +46,7 @@ func (i *I18n) LoadTranslations(dir string) error {
 	for _, file := range files {
 		// Extract language code from filename (e.g., "en.json" -> "en")
 		lang := strings.TrimSuffix(filepath.Base(file), ".json")
-		
+
 		if err := i.LoadLanguage(lang, file); err != nil {
 			return fmt.Errorf("failed to load language %s: %w", lang, err)
 		}

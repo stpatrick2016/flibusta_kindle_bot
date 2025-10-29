@@ -31,7 +31,7 @@ func (b *Book) FormatSize() string {
 		div *= unit
 		exp++
 	}
-	return fmt.Sprintf("%.1f %cB", float64(b.Size)/float64(div), "KMGTPE"[exp])
+	return fmt.Sprintf("%.2f %cB", float64(b.Size)/float64(div), "KMGTPE"[exp])
 }
 
 // IsValidFormat checks if the book format is supported by Kindle
@@ -46,4 +46,14 @@ func (b *Book) IsValidFormat() bool {
 		"docx": true,
 	}
 	return validFormats[strings.ToLower(b.Format)]
+}
+
+// GetDownloadURL returns the download URL for the book
+func (b *Book) GetDownloadURL() string {
+	return b.URL
+}
+
+// String returns a string representation of the book
+func (b *Book) String() string {
+	return fmt.Sprintf("%s by %s (%s, %s)", b.Title, b.Author, b.Format, b.FormatSize())
 }

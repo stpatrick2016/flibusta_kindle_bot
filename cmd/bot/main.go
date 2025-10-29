@@ -11,6 +11,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/bot"
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/config"
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/i18n"
@@ -35,7 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize i18n: %v", err)
 	}
-	log.Printf("Loaded translations for languages: %v", i18nInstance.AvailableLanguages())
+	log.Printf("Loaded translations for languages: %v", i18nInstance.GetSupportedLanguages())
 
 	// Initialize user repository
 	var userRepo user.Repository
@@ -83,7 +84,10 @@ func main() {
 	case "webhook":
 		go runWebhookMode(ctx, cfg, botAPI, handler)
 	default:
-		log.Fatalf("Unknown bot mode: %s", cfg.BotMode)
+		// Cancel context and log error, then exit
+		cancel()
+		log.Printf("Unknown bot mode: %s", cfg.BotMode)
+		os.Exit(1)
 	}
 
 	// Wait for shutdown signal
@@ -96,7 +100,7 @@ func main() {
 	log.Println("Bot stopped")
 }
 
-// runPollingMode runs the bot in polling mode (long polling)
+// runPollingMode runs the bot in polling mode (long polling).
 func runPollingMode(ctx context.Context, botAPI *tgbotapi.BotAPI, handler *bot.Handler) {
 	log.Println("Starting bot in polling mode...")
 
@@ -113,11 +117,12 @@ func runPollingMode(ctx context.Context, botAPI *tgbotapi.BotAPI, handler *bot.H
 		case <-ctx.Done():
 			log.Println("Stopping polling...")
 			botAPI.StopReceivingUpdates()
+
 			return
 		case update := <-updates:
 			// Process update in background to avoid blocking
 			go func(update tgbotapi.Update) {
-				if err := handler.HandleUpdate(ctx, update); err != nil {
+				if err := handler.HandleUpdate(ctx, &update); err != nil {
 					log.Printf("Error handling update: %v", err)
 				}
 			}(update)
@@ -125,19 +130,18 @@ func runPollingMode(ctx context.Context, botAPI *tgbotapi.BotAPI, handler *bot.H
 	}
 }
 
-// runWebhookMode runs the bot in webhook mode
+// runWebhookMode runs the bot in webhook mode.
 func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.BotAPI, handler *bot.Handler) {
 	log.Println("Starting bot in webhook mode...")
 
 	// Set webhook
-	webhookConfig, err := tgbotapi.NewWebhook(cfg.WebhookURL)
-	if err != nil {
-		log.Fatalf("Failed to create webhook config: %v", err)
+	webhookConfig, wErr := tgbotapi.NewWebhook(cfg.WebhookURL)
+	if wErr != nil {
+		log.Fatalf("Failed to create webhook config: %v", wErr)
 	}
 
-	if cfg.WebhookSecret != "" {
-		webhookConfig.SecretToken = cfg.WebhookSecret
-	}
+	// Note: SecretToken is available in newer versions of telegram-bot-api.
+	// If needed, upgrade to v6+ for webhook secret token support.
 
 	if _, err := botAPI.Request(webhookConfig); err != nil {
 		log.Fatalf("Failed to set webhook: %v", err)
@@ -162,6 +166,7 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 			if token != cfg.WebhookSecret {
 				log.Printf("Invalid webhook secret token")
 				w.WriteHeader(http.StatusUnauthorized)
+
 				return
 			}
 		}
@@ -171,13 +176,15 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 		if err != nil {
 			log.Printf("Error parsing webhook update: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
+
 			return
 		}
 
 		// Handle update
-		if err := handler.HandleUpdate(ctx, *update); err != nil {
+		if err := handler.HandleUpdate(ctx, update); err != nil {
 			log.Printf("Error handling webhook update: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
+
 			return
 		}
 
@@ -185,7 +192,7 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 	})
 
 	// Health check endpoint
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "OK")
 	})
