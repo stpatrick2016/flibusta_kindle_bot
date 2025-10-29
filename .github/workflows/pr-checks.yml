@@ -2,9 +2,9 @@ name: PR Checks
 
 on:
   pull_request:
-    branches: [main, develop]
-  push:
-    branches: [main, develop]
+    branches: [master]
+    
+  workflow_dispatch:
 
 permissions:
   contents: read
