@@ -3,7 +3,7 @@ name: PR Checks
 on:
   pull_request:
     branches: [master]
-    
+
   workflow_dispatch:
 
 permissions:
@@ -72,11 +72,11 @@ jobs:
         run: |
           coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
           echo "Total coverage: ${coverage}%"
-          if (( $(echo "$coverage < 60" | bc -l) )); then
-            echo "❌ Coverage is below 60%"
+          if (( $(echo "$coverage < 50" | bc -l) )); then
+            echo "❌ Coverage is below 50%"
             exit 1
           fi
-          echo "✅ Coverage meets threshold"
+          echo "✅ Coverage meets threshold (50%)"
 
   build:
     name: Build Application

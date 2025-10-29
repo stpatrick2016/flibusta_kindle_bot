@@ -11,6 +11,7 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/bot"
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/config"
 	"github.com/stpatrick2016/flibusta_kindle_bot/internal/i18n"
@@ -83,8 +84,10 @@ func main() {
 	case "webhook":
 		go runWebhookMode(ctx, cfg, botAPI, handler)
 	default:
-		cancel() // Cancel context before fatal
-		log.Fatalf("Unknown bot mode: %s", cfg.BotMode)
+		// Cancel context and log error, then exit
+		cancel()
+		log.Printf("Unknown bot mode: %s", cfg.BotMode)
+		os.Exit(1)
 	}
 
 	// Wait for shutdown signal
@@ -119,7 +122,7 @@ func runPollingMode(ctx context.Context, botAPI *tgbotapi.BotAPI, handler *bot.H
 		case update := <-updates:
 			// Process update in background to avoid blocking
 			go func(update tgbotapi.Update) {
-				if err := handler.HandleUpdate(ctx, update); err != nil {
+				if err := handler.HandleUpdate(ctx, &update); err != nil {
 					log.Printf("Error handling update: %v", err)
 				}
 			}(update)
@@ -189,7 +192,7 @@ func runWebhookMode(ctx context.Context, cfg *config.Config, botAPI *tgbotapi.Bo
 	})
 
 	// Health check endpoint
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "OK")
 	})
